@@ -1,0 +1,386 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History | ResumeIQ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 12px 0 28px;
+        }
+
+        .history-header h1 {
+            font-size: 32px;
+            margin: 12px 0 8px;
+            letter-spacing: -1px;
+        }
+
+        .history-header p {
+            color: var(--muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .home-btn {
+            text-decoration: none;
+            padding: 12px 18px;
+            background: linear-gradient(105deg, #347cf6, #8e5cf5);
+            color: white;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 12px;
+            display: block;
+        }
+
+        .history-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .table-toolbar h2 {
+            font-size: 19px;
+            margin: 0 0 6px;
+        }
+
+        .table-toolbar p {
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .search-box {
+            max-width: 300px;
+            width: 100%;
+            padding: 11px 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--surface);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        .history-table th {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            background: #f5f7fc;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 16px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .history-table tbody tr:hover {
+            background: #f7f9ff;
+        }
+
+        .file-name {
+            font-weight: 700;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-subtitle {
+            color: var(--muted);
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        .score-badge {
+            display: inline-block;
+            font-weight: 700;
+            padding: 7px 10px;
+            border-radius: 20px;
+            background: #e3f8ef;
+            color: #078363;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 43px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px;
+            font-size: 20px;
+        }
+
+        .empty-state p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .no-results {
+            display: none;
+            padding: 25px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        body.dark .history-table th,
+        body.dark .history-table tbody tr:hover {
+            background: #202c42;
+        }
+
+        body.dark .score-badge {
+            background: #1b403a;
+            color: #9ce8d5;
+        }
+
+        @media (max-width: 650px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card { padding: 17px; }
+            .stat-value { font-size: 24px; }
+            .history-panel { padding: 15px; }
+            .history-header h1 { font-size: 26px; }
+        }
+    </style>
+</head>
+
+<body>
+<nav class="navbar">
+    <a href="{{ url_for('index') }}" class="brand">
+        <span class="brand-icon">R</span> Resume<span>IQ</span>
+    </a>
+
+    <div class="nav-links">
+        <a href="{{ url_for('index') }}">⌂ Home</a>
+        <a class="active" href="{{ url_for('history') }}">◷ History</a>
+    </div>
+
+    <button type="button" class="theme-toggle" id="themeToggle"
+            aria-label="Toggle dark mode">☾</button>
+</nav>
+
+<main class="page">
+    <div class="history-header">
+        <div>
+            <span class="eyebrow">YOUR CAREER PROGRESS</span>
+            <h1>Analysis History 📊</h1>
+            <p>Review your previous resume analyses and match scores.</p>
+        </div>
+
+        <a class="home-btn" href="{{ url_for('index') }}">
+            + New Analysis
+        </a>
+    </div>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-label">Total Analyses</span>
+            <span class="stat-value">{{ analyses|length }}</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">Average Match Score</span>
+            <span class="stat-value">
+                {% if analyses %}
+                    {{ "%.1f"|format(
+                        analyses|sum(attribute='match_score') / analyses|length
+                    ) }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">Highest Match Score</span>
+            <span class="stat-value">
+                {% if analyses %}
+                    {{ "%.1f"|format(
+                        analyses|max(attribute='match_score')|attr('match_score')
+                    ) }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </span>
+        </div>
+    </section>
+
+    <section class="history-panel">
+        <div class="table-toolbar">
+            <div>
+                <h2>Previous Analyses</h2>
+                <p>Your latest saved resume comparisons</p>
+            </div>
+
+            <input type="search" id="historySearch"
+                   class="search-box"
+                   placeholder="Search filename or job title..."
+                   aria-label="Search analysis history">
+        </div>
+
+        {% if analyses %}
+        <div style="overflow-x:auto">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Resume</th>
+                        <th>Target Role</th>
+                        <th>Match Score</th>
+                        <th>Analysis Date (UTC)</th>
+                    </tr>
+                </thead>
+
+                <tbody id="historyBody">
+                    {% for item in analyses %}
+                    <tr class="history-row">
+                        <td>
+                            <div class="file-name"
+                                 title="{{ item.resume_filename }}">
+                                📄 {{ item.resume_filename }}
+                            </div>
+                            <div class="file-subtitle">
+                                Analysis #{{ item.id }}
+                            </div>
+                        </td>
+
+                        <td>{{ item.job_title }}</td>
+
+                        <td>
+                            <span class="score-badge">
+                                {{ "%.1f"|format(item.match_score) }}%
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ item.created_at.strftime("%d %b %Y, %H:%M") }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="no-results" id="noResults">
+            No analyses match your search.
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <h3>No analyses yet</h3>
+            <p>Your analysis history will appear here after you upload a
+               resume and compare it with a job description.</p>
+            <a class="home-btn" href="{{ url_for('index') }}">
+                Analyze Your First Resume →
+            </a>
+        </div>
+        {% endif %}
+    </section>
+
+    <footer>ResumeIQ · Track your progress. Build your future.</footer>
+</main>
+
+<script>
+    const searchInput = document.getElementById("historySearch");
+    const rows = document.querySelectorAll(".history-row");
+    const noResults = document.getElementById("noResults");
+
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            const query = this.value.toLowerCase().trim();
+            let visible = 0;
+
+            rows.forEach(row => {
+                const matches = row.textContent.toLowerCase().includes(query);
+                row.style.display = matches ? "" : "none";
+                if (matches) visible++;
+            });
+
+            if (noResults) {
+                noResults.style.display =
+                    visible === 0 && rows.length ? "block" : "none";
+            }
+        });
+    }
+
+    const themeToggle = document.getElementById("themeToggle");
+
+    if (localStorage.getItem("resumeiq-theme") === "dark") {
+        document.body.classList.add("dark");
+        themeToggle.textContent = "☀";
+    }
+
+    themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+
+        const dark = document.body.classList.contains("dark");
+        localStorage.setItem("resumeiq-theme", dark ? "dark" : "light");
+        themeToggle.textContent = dark ? "☀" : "☾";
+    });
+</script>
+</body>
+</html>
